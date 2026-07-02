@@ -4,8 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { parseIfcElements } from "@/modules/bim/ifc-parser";
 import { insertElements } from "@/modules/bim/element.repository";
-
-const STORAGE_BUCKET = "ifc-models";
+import { IFC_STORAGE_BUCKET as STORAGE_BUCKET } from "@/modules/bim/storage";
 
 async function ensureBucketExists(
   supabase: ReturnType<typeof createAdminClient>,

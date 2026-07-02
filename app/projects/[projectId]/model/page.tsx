@@ -2,6 +2,7 @@ import { BimViewer } from "@/components/viewer/BimViewer";
 import { ModelOverlays } from "@/components/viewer/ModelOverlays";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { countElementsByType, getLatestModel } from "@/modules/bim/element.repository";
+import { getIfcSignedUrl } from "@/modules/bim/storage";
 import { listTasksByProject } from "@/modules/schedule/task.repository";
 
 export default async function ModelPage({
@@ -17,11 +18,20 @@ export default async function ModelPage({
     listTasksByProject(supabase, projectId),
   ]);
 
-  const elements = model ? await countElementsByType(supabase, model.id) : [];
+  const [elements, initialModelUrl] = await Promise.all([
+    model ? countElementsByType(supabase, model.id) : Promise.resolve([]),
+    model && model.status === "ready"
+      ? getIfcSignedUrl(supabase, model.storagePath)
+      : Promise.resolve(null),
+  ]);
 
   return (
     <div className="relative h-full w-full">
-      <BimViewer projectId={projectId} />
+      <BimViewer
+        projectId={projectId}
+        initialModelUrl={initialModelUrl}
+        initialModelName={model?.originalFilename}
+      />
       <ModelOverlays elements={elements} tasks={tasks} />
     </div>
   );

@@ -44,14 +44,21 @@ export async function insertElements(
   if (error) throw error;
 }
 
+export type LatestModel = {
+  id: string;
+  originalFilename: string;
+  status: string;
+  storagePath: string;
+};
+
 /** Último modelo BIM cargado para un proyecto, o null si no hay ninguno. */
 export async function getLatestModel(
   supabase: Client,
   projectId: string,
-): Promise<{ id: string; originalFilename: string; status: string } | null> {
+): Promise<LatestModel | null> {
   const { data, error } = await supabase
     .from("bim_models")
-    .select("id, original_filename, status")
+    .select("id, original_filename, status, storage_path")
     .eq("project_id", projectId)
     .order("created_at", { ascending: false })
     .limit(1)
@@ -60,7 +67,12 @@ export async function getLatestModel(
   if (error) throw error;
   if (!data) return null;
 
-  return { id: data.id, originalFilename: data.original_filename, status: data.status };
+  return {
+    id: data.id,
+    originalFilename: data.original_filename,
+    status: data.status,
+    storagePath: data.storage_path,
+  };
 }
 
 /** Cantidad de elementos por tipo IFC (IfcWall, IfcSlab, ...) de un modelo. */

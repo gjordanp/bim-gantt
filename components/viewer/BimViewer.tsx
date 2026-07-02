@@ -10,6 +10,8 @@ type LoadStatus = "idle" | "loading" | "saving" | "ready" | "error";
 
 type BimViewerProps = {
   projectId: string;
+  initialModelUrl?: string | null;
+  initialModelName?: string;
   onSelectionChange?: (elements: SelectedElement[]) => void;
 };
 
@@ -17,7 +19,12 @@ type BimViewerProps = {
  * Visor 3D a pantalla completa sobre @thatopen/components: carga de IFC,
  * hover animado (Hoverer) y selección con contorno (Highlighter + Outliner).
  */
-export function BimViewer({ projectId, onSelectionChange }: BimViewerProps) {
+export function BimViewer({
+  projectId,
+  initialModelUrl,
+  initialModelName,
+  onSelectionChange,
+}: BimViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<ThatOpenViewer | null>(null);
   const router = useRouter();
@@ -33,7 +40,7 @@ export function BimViewer({ projectId, onSelectionChange }: BimViewerProps) {
     let disposed = false;
     let unsubscribe: (() => void) | undefined;
 
-    ThatOpenViewer.create(container).then((viewer) => {
+    ThatOpenViewer.create(container).then(async (viewer) => {
       if (disposed) {
         viewer.dispose();
         return;
@@ -41,6 +48,26 @@ export function BimViewer({ projectId, onSelectionChange }: BimViewerProps) {
       viewerRef.current = viewer;
       if (onSelectionChange) {
         unsubscribe = viewer.onSelectionChange(onSelectionChange);
+      }
+
+      if (initialModelUrl) {
+        setStatus("loading");
+        setFileName(initialModelName ?? "modelo guardado");
+        try {
+          const response = await fetch(initialModelUrl);
+          if (!response.ok) throw new Error(`No se pudo descargar el modelo (${response.status}).`);
+          const buffer = new Uint8Array(await response.arrayBuffer());
+          if (disposed) return;
+          await viewer.loadIfc(buffer, initialModelName ?? "modelo.ifc");
+          if (!disposed) setStatus("ready");
+        } catch (err) {
+          if (!disposed) {
+            setStatus("error");
+            setErrorMessage(
+              err instanceof Error ? err.message : "No se pudo cargar el modelo guardado.",
+            );
+          }
+        }
       }
     });
 
