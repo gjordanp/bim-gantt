@@ -1,24 +1,27 @@
 import { Card, SectionHeading } from "@/components/ui/Card";
-import { Row } from "@/components/ui/Row";
-
-const SUMMARY = [
-  { label: "Avance general de obra", value: "58%" },
-  { label: "Tareas completadas", value: "1 / 3" },
-  { label: "Elementos BIM con avance registrado", value: "246 / 493" },
-];
+import { KpiCard } from "@/components/ui/KpiCard";
+import { Boxes, ClipboardCheck, TrendingUp } from "lucide-react";
 
 export default function ProgressPage() {
   return (
-    <Card>
-      <SectionHeading index="07" title="AVANCE DE OBRA" />
-      {SUMMARY.map((item) => (
-        <Row key={item.label} label={item.label} trailing={<span className="font-bold text-primary">{item.value}</span>} />
-      ))}
-      <p className="mt-4 text-xs text-muted">
-        Calculado desde{" "}
-        <span className="kg-chip">modules/linking/progress-aggregator.ts</span>{" "}
-        y la vista SQL <span className="kg-chip">bim_element_progress</span>.
-      </p>
-    </Card>
+    <div className="flex flex-col gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <KpiCard label="Avance general de obra" value="58%" icon={TrendingUp} tone="accent" />
+        <KpiCard label="Tareas completadas" value="1 / 3" icon={ClipboardCheck} />
+        <KpiCard
+          label="Elementos BIM con avance"
+          value="246 / 493"
+          icon={Boxes}
+        />
+      </div>
+      <Card>
+        <SectionHeading title="Fuente de los datos" />
+        <p className="text-sm text-muted">
+          Calculado desde{" "}
+          <span className="kg-chip">modules/linking/progress-aggregator.ts</span>{" "}
+          y la vista SQL <span className="kg-chip">bim_element_progress</span>.
+        </p>
+      </Card>
+    </div>
   );
 }

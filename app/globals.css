@@ -1,26 +1,31 @@
 @import "tailwindcss";
 
 /*
- * Design tokens extraídos de la guía de estilos KangoLab
- * (Claude Code Cheatsheet - Kango Labs.pdf): rojo corporativo,
- * tinta casi-negra, gris muted, superficie clara para "chips" de código.
+ * Design tokens generados con la skill ui-ux-pro-max para un
+ * "Data-Dense Dashboard" (BI/analytics técnico): azul de datos +
+ * acento ámbar, tipografía Fira Sans/Fira Code.
  */
 :root {
-  --background: #ffffff;
-  --foreground: #111111;
+  --background: #f8fafc;
+  --foreground: #1e3a8a;
 
-  --color-ink: #111111;
-  --color-muted: #6b7280;
-  --color-primary: #b91c1c;
-  --color-primary-hover: #991b1b;
+  --color-ink: #0f172a;
+  --color-muted: #64748b;
+  --color-primary: #1e40af;
+  --color-primary-hover: #1e3a8a;
+  --color-on-primary: #ffffff;
+  --color-accent: #d97706;
+  --color-secondary: #3b82f6;
   --color-surface: #ffffff;
-  --color-surface-alt: #f3f4f6;
-  --color-border: #e5e7eb;
+  --color-surface-alt: #e9eef6;
+  --color-border: #dbeafe;
+  --color-destructive: #dc2626;
+  --color-ring: #1e40af;
 
-  --color-status-pending: #6b7280;
-  --color-status-progress: #b45309;
-  --color-status-done: #15803d;
-  --color-status-blocked: #b91c1c;
+  --color-status-pending: #64748b;
+  --color-status-progress: #d97706;
+  --color-status-done: #16a34a;
+  --color-status-blocked: #dc2626;
 }
 
 @theme inline {
@@ -30,45 +35,47 @@
   --color-muted: var(--color-muted);
   --color-primary: var(--color-primary);
   --color-primary-hover: var(--color-primary-hover);
+  --color-on-primary: var(--color-on-primary);
+  --color-accent: var(--color-accent);
+  --color-secondary: var(--color-secondary);
   --color-surface: var(--color-surface);
   --color-surface-alt: var(--color-surface-alt);
   --color-border: var(--color-border);
+  --color-destructive: var(--color-destructive);
+  --color-ring: var(--color-ring);
   --color-status-pending: var(--color-status-pending);
   --color-status-progress: var(--color-status-progress);
   --color-status-done: var(--color-status-done);
   --color-status-blocked: var(--color-status-blocked);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 }
 
 body {
   background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  color: var(--color-ink);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Chip estilo "/comando" del PDF: fondo gris claro, texto monoespaciado */
+/* Etiqueta monoespaciada para nombres de archivo/código dentro de texto. */
 .kg-chip {
   font-family: var(--font-mono), ui-monospace, monospace;
   background: var(--color-surface-alt);
-  color: var(--color-ink);
+  color: var(--color-primary);
   border-radius: 0.25rem;
   padding: 0.125rem 0.5rem;
   font-size: 0.8125rem;
 }
 
-/* Fila con marcador rojo "—", patrón repetido en toda la guía */
+/* Fila de tabla de datos: separador sutil, sin decoración. */
 .kg-row {
   display: flex;
   gap: 0.75rem;
-  align-items: baseline;
+  align-items: center;
   padding-block: 0.75rem;
   border-bottom: 1px solid var(--color-border);
 }
 
-.kg-row::before {
-  content: "—";
-  color: var(--color-primary);
-  font-weight: 700;
-  flex-shrink: 0;
+.kg-row:last-child {
+  border-bottom: none;
 }

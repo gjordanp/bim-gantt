@@ -42,7 +42,7 @@ const MOCK_TASKS: ScheduleTask[] = [
 export default function SchedulePage() {
   return (
     <Card>
-      <SectionHeading index="04" title="CARTA GANTT" />
+      <SectionHeading title="Carta Gantt" />
       <GanttChart tasks={MOCK_TASKS} />
     </Card>
   );

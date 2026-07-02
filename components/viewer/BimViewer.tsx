@@ -30,7 +30,7 @@ export function BimViewer() {
     if (!container) return;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#f3f4f6");
+    scene.background = new THREE.Color("#e9eef6");
 
     const camera = new THREE.PerspectiveCamera(
       50,
@@ -48,7 +48,7 @@ export function BimViewer() {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
 
-    const grid = new THREE.GridHelper(20, 20, 0xb91c1c, 0xe5e7eb);
+    const grid = new THREE.GridHelper(20, 20, 0x1e40af, 0xdbeafe);
     scene.add(grid);
 
     const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);

@@ -4,7 +4,7 @@ type RowProps = {
   trailing?: React.ReactNode;
 };
 
-/** Fila con marcador rojo "—", patrón repetido en la guía de estilos KangoLab. */
+/** Fila de tabla de datos: label + descripción + acción, separador sutil. */
 export function Row({ label, description, trailing }: RowProps) {
   return (
     <div className="kg-row">

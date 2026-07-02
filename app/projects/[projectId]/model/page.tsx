@@ -6,11 +6,11 @@ export default function ModelPage() {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <Card className="lg:col-span-2">
-        <SectionHeading index="02" title="MODELO BIM (.IFC)" />
+        <SectionHeading title="Modelo BIM (.ifc)" />
         <BimViewer />
       </Card>
       <Card>
-        <SectionHeading index="03" title="ELEMENTOS DEL MODELO" />
+        <SectionHeading title="Elementos del modelo" />
         <Row label="IfcWall" description="248 elementos" />
         <Row label="IfcSlab" description="36 elementos" />
         <Row label="IfcColumn" description="112 elementos" />

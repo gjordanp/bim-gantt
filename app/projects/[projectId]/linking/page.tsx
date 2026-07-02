@@ -6,7 +6,7 @@ export default function LinkingPage() {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <Card>
-        <SectionHeading index="05" title="ELEMENTOS SIN VINCULAR" />
+        <SectionHeading title="Elementos sin vincular" />
         <Row
           label="IfcColumn #482"
           description="Nivel 2, eje C-4"
@@ -19,7 +19,7 @@ export default function LinkingPage() {
         />
       </Card>
       <Card>
-        <SectionHeading index="06" title="VÍNCULOS ACTIVOS" />
+        <SectionHeading title="Vínculos activos" />
         <Row
           label="Estructura nivel 1"
           description="86 elementos vinculados"
