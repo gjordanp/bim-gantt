@@ -13,7 +13,7 @@ create type project_role as enum ('owner', 'editor', 'viewer');
 
 create table projects (
   id uuid primary key default gen_random_uuid(),
-  org_id uuid not null,
+  org_id uuid, -- nullable: no hay gestión de organizaciones todavía
   name text not null,
   created_at timestamptz not null default now()
 );
@@ -137,9 +137,22 @@ create policy "editors can write models"
   on bim_models for insert
   with check (is_project_member(project_id));
 
+create policy "editors can update models"
+  on bim_models for update
+  using (is_project_member(project_id));
+
 create policy "members can read elements of their models"
   on bim_elements for select
   using (
+    exists (
+      select 1 from bim_models m
+      where m.id = model_id and is_project_member(m.project_id)
+    )
+  );
+
+create policy "editors can write elements"
+  on bim_elements for insert
+  with check (
     exists (
       select 1 from bim_models m
       where m.id = model_id and is_project_member(m.project_id)

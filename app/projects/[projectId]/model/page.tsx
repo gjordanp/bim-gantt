@@ -1,19 +1,28 @@
 import { BimViewer } from "@/components/viewer/BimViewer";
 import { ModelOverlays } from "@/components/viewer/ModelOverlays";
-import { MOCK_TASKS } from "@/modules/shared/mock-data";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { countElementsByType, getLatestModel } from "@/modules/bim/element.repository";
+import { listTasksByProject } from "@/modules/schedule/task.repository";
 
-const MOCK_ELEMENTS = [
-  { type: "IfcWall", count: 248 },
-  { type: "IfcSlab", count: 36 },
-  { type: "IfcColumn", count: 112 },
-  { type: "IfcBeam", count: 97 },
-];
+export default async function ModelPage({
+  params,
+}: {
+  params: Promise<{ projectId: string }>;
+}) {
+  const { projectId } = await params;
+  const supabase = createAdminClient();
 
-export default function ModelPage() {
+  const [model, tasks] = await Promise.all([
+    getLatestModel(supabase, projectId),
+    listTasksByProject(supabase, projectId),
+  ]);
+
+  const elements = model ? await countElementsByType(supabase, model.id) : [];
+
   return (
     <div className="relative h-full w-full">
-      <BimViewer />
-      <ModelOverlays elements={MOCK_ELEMENTS} tasks={MOCK_TASKS} />
+      <BimViewer projectId={projectId} />
+      <ModelOverlays elements={elements} tasks={tasks} />
     </div>
   );
 }

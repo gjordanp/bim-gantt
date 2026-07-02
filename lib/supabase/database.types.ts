@@ -8,13 +8,13 @@ export type Database = {
       projects: {
         Row: {
           id: string;
-          org_id: string;
+          org_id: string | null;
           name: string;
           created_at: string;
         };
         Insert: {
           id?: string;
-          org_id: string;
+          org_id?: string | null;
           name: string;
           created_at?: string;
         };

@@ -44,6 +44,44 @@ export async function insertElements(
   if (error) throw error;
 }
 
+/** Último modelo BIM cargado para un proyecto, o null si no hay ninguno. */
+export async function getLatestModel(
+  supabase: Client,
+  projectId: string,
+): Promise<{ id: string; originalFilename: string; status: string } | null> {
+  const { data, error } = await supabase
+    .from("bim_models")
+    .select("id, original_filename, status")
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  return { id: data.id, originalFilename: data.original_filename, status: data.status };
+}
+
+/** Cantidad de elementos por tipo IFC (IfcWall, IfcSlab, ...) de un modelo. */
+export async function countElementsByType(
+  supabase: Client,
+  modelId: string,
+): Promise<{ type: string; count: number }[]> {
+  const { data, error } = await supabase
+    .from("bim_elements")
+    .select("ifc_type")
+    .eq("model_id", modelId);
+
+  if (error) throw error;
+
+  const counts = new Map<string, number>();
+  for (const row of data) {
+    counts.set(row.ifc_type, (counts.get(row.ifc_type) ?? 0) + 1);
+  }
+  return Array.from(counts.entries()).map(([type, count]) => ({ type, count }));
+}
+
 /** Avance derivado (vista bim_element_progress) para cada elemento del modelo. */
 export async function getElementProgress(
   supabase: Client,

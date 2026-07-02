@@ -13,6 +13,10 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.110.0",
+    "@thatopen/components": "^3.4.6",
+    "@thatopen/components-front": "^3.4.3",
+    "@thatopen/fragments": "^3.4.6",
+    "camera-controls": "^3.1.2",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
     "frappe-gantt": "^1.2.2",
@@ -20,18 +24,20 @@
     "next": "16.2.10",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "three": "0.159.0",
-    "web-ifc": "^0.0.77",
-    "web-ifc-three": "^0.0.126"
+    "server-only": "^0.0.1",
+    "three": "^0.185.1",
+    "web-ifc": "^0.0.77"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/three": "0.159.0",
+    "@types/three": "^0.185.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
+    "pg": "^8.22.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

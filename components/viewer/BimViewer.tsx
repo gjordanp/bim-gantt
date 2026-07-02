@@ -1,26 +1,26 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { useRouter } from "next/navigation";
 import { Upload } from "lucide-react";
-import { BimViewerAdapter } from "@/modules/bim/viewer.adapter";
+import { ThatOpenViewer, type SelectedElement } from "@/modules/bim/thatopen-viewer";
+import { uploadIfcModel } from "@/app/actions/bim-models";
 
-type LoadStatus = "idle" | "loading" | "ready" | "error";
+type LoadStatus = "idle" | "loading" | "saving" | "ready" | "error";
+
+type BimViewerProps = {
+  projectId: string;
+  onSelectionChange?: (elements: SelectedElement[]) => void;
+};
 
 /**
- * Visor 3D a pantalla completa: escena three.js con grid de referencia; al
- * subir un .ifc, lo carga vía BimViewerAdapter (web-ifc-three) y encuadra
- * la cámara. Requiere los .wasm de web-ifc en public/wasm/.
+ * Visor 3D a pantalla completa sobre @thatopen/components: carga de IFC,
+ * hover animado (Hoverer) y selección con contorno (Highlighter + Outliner).
  */
-export function BimViewer() {
+export function BimViewer({ projectId, onSelectionChange }: BimViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const adapterRef = useRef<BimViewerAdapter | null>(null);
-  const sceneRefs = useRef<{
-    scene: THREE.Scene;
-    camera: THREE.PerspectiveCamera;
-    controls: OrbitControls;
-  } | null>(null);
+  const viewerRef = useRef<ThatOpenViewer | null>(null);
+  const router = useRouter();
 
   const [status, setStatus] = useState<LoadStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -30,81 +30,52 @@ export function BimViewer() {
     const container = containerRef.current;
     if (!container) return;
 
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#e9eef6");
+    let disposed = false;
+    let unsubscribe: (() => void) | undefined;
 
-    const camera = new THREE.PerspectiveCamera(
-      50,
-      container.clientWidth / container.clientHeight,
-      0.1,
-      1000,
-    );
-    camera.position.set(6, 6, 6);
-    camera.lookAt(0, 0, 0);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    container.appendChild(renderer.domElement);
-
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-
-    const grid = new THREE.GridHelper(20, 20, 0x1e40af, 0xdbeafe);
-    scene.add(grid);
-
-    const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
-    scene.add(light);
-
-    const adapter = new BimViewerAdapter(scene);
-    adapter.setWasmPath("/wasm/");
-    adapterRef.current = adapter;
-    sceneRefs.current = { scene, camera, controls };
-
-    let frameId: number;
-    let idle = true;
-    const animate = () => {
-      if (idle) grid.rotation.y += 0.0015;
-      controls.update();
-      renderer.render(scene, camera);
-      frameId = requestAnimationFrame(animate);
-    };
-    animate();
-
-    const resizeObserver = new ResizeObserver(() => {
-      camera.aspect = container.clientWidth / container.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
+    ThatOpenViewer.create(container).then((viewer) => {
+      if (disposed) {
+        viewer.dispose();
+        return;
+      }
+      viewerRef.current = viewer;
+      if (onSelectionChange) {
+        unsubscribe = viewer.onSelectionChange(onSelectionChange);
+      }
     });
-    resizeObserver.observe(container);
 
     return () => {
-      idle = false;
-      cancelAnimationFrame(frameId);
-      resizeObserver.disconnect();
-      controls.dispose();
-      renderer.dispose();
-      container.removeChild(renderer.domElement);
+      disposed = true;
+      unsubscribe?.();
+      viewerRef.current?.dispose();
+      viewerRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    if (!file || !adapterRef.current || !sceneRefs.current) return;
+    if (!file || !viewerRef.current) return;
 
     setStatus("loading");
     setErrorMessage(null);
     setFileName(file.name);
 
-    const url = URL.createObjectURL(file);
     try {
-      const model = await adapterRef.current.loadModel(url);
-      fitCameraToModel(model, sceneRefs.current.camera, sceneRefs.current.controls);
+      const buffer = new Uint8Array(await file.arrayBuffer());
+      await viewerRef.current.loadIfc(buffer, file.name);
+
+      setStatus("saving");
+      const uploadForm = new FormData();
+      uploadForm.set("file", file);
+      await uploadIfcModel(projectId, uploadForm);
+
       setStatus("ready");
+      router.refresh();
     } catch (err) {
       setStatus("error");
       setErrorMessage(err instanceof Error ? err.message : "No se pudo cargar el archivo .ifc");
     } finally {
-      URL.revokeObjectURL(url);
       event.target.value = "";
     }
   }
@@ -129,6 +100,11 @@ export function BimViewer() {
             Cargando {fileName}…
           </span>
         )}
+        {status === "saving" && (
+          <span className="pointer-events-auto rounded-md bg-surface px-3 py-2 text-xs text-muted shadow-sm">
+            Guardando en Supabase…
+          </span>
+        )}
         {status === "ready" && (
           <span className="pointer-events-auto rounded-md bg-surface px-3 py-2 text-xs text-status-done shadow-sm">
             {fileName} cargado
@@ -142,25 +118,4 @@ export function BimViewer() {
       </div>
     </div>
   );
-}
-
-function fitCameraToModel(
-  model: THREE.Group,
-  camera: THREE.PerspectiveCamera,
-  controls: OrbitControls,
-): void {
-  const box = new THREE.Box3().setFromObject(model);
-  const center = box.getCenter(new THREE.Vector3());
-  const size = box.getSize(new THREE.Vector3());
-  const maxDim = Math.max(size.x, size.y, size.z, 1);
-  const distance = maxDim / (2 * Math.tan((camera.fov * Math.PI) / 360));
-
-  camera.position.set(
-    center.x + distance,
-    center.y + distance,
-    center.z + distance,
-  );
-  camera.lookAt(center);
-  controls.target.copy(center);
-  controls.update();
 }
