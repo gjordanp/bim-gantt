@@ -4,7 +4,7 @@ import { Chip } from "@/components/ui/Chip";
 
 export default function LinkingPage() {
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-6 px-8 py-8 lg:grid-cols-2">
       <Card>
         <SectionHeading title="Elementos sin vincular" />
         <Row

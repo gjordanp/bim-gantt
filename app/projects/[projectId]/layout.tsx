@@ -13,9 +13,9 @@ export default async function ProjectLayout({
   return (
     <div className="flex min-h-full flex-1">
       <Sidebar projectId={projectId} />
-      <div className="flex min-h-full flex-1 flex-col bg-background">
+      <div className="flex h-full min-h-full flex-1 flex-col overflow-hidden bg-background">
         <TopBar projectName="Edificio Corporativo Santiago" />
-        <main className="flex-1 px-8 py-8">{children}</main>
+        <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>
   );

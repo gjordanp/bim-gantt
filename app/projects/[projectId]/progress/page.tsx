@@ -4,7 +4,7 @@ import { Boxes, ClipboardCheck, TrendingUp } from "lucide-react";
 
 export default function ProgressPage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 px-8 py-8">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <KpiCard label="Avance general de obra" value="58%" icon={TrendingUp} tone="accent" />
         <KpiCard label="Tareas completadas" value="1 / 3" icon={ClipboardCheck} />

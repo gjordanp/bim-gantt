@@ -3,14 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { Upload } from "lucide-react";
 import { BimViewerAdapter } from "@/modules/bim/viewer.adapter";
 
 type LoadStatus = "idle" | "loading" | "ready" | "error";
 
 /**
- * Visor 3D: escena three.js con grid de referencia; al subir un .ifc,
- * lo carga vía BimViewerAdapter (web-ifc-three) y encuadra la cámara.
- * Requiere los .wasm de web-ifc en public/wasm/ (ver ifcManager.setWasmPath).
+ * Visor 3D a pantalla completa: escena three.js con grid de referencia; al
+ * subir un .ifc, lo carga vía BimViewerAdapter (web-ifc-three) y encuadra
+ * la cámara. Requiere los .wasm de web-ifc en public/wasm/.
  */
 export function BimViewer() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -60,29 +61,30 @@ export function BimViewer() {
     sceneRefs.current = { scene, camera, controls };
 
     let frameId: number;
+    let idle = true;
     const animate = () => {
-      if (status === "idle") grid.rotation.y += 0.0015;
+      if (idle) grid.rotation.y += 0.0015;
       controls.update();
       renderer.render(scene, camera);
       frameId = requestAnimationFrame(animate);
     };
     animate();
 
-    const handleResize = () => {
+    const resizeObserver = new ResizeObserver(() => {
       camera.aspect = container.clientWidth / container.clientHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(container.clientWidth, container.clientHeight);
-    };
-    window.addEventListener("resize", handleResize);
+    });
+    resizeObserver.observe(container);
 
     return () => {
+      idle = false;
       cancelAnimationFrame(frameId);
-      window.removeEventListener("resize", handleResize);
+      resizeObserver.disconnect();
       controls.dispose();
       renderer.dispose();
       container.removeChild(renderer.domElement);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -108,13 +110,12 @@ export function BimViewer() {
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div
-        ref={containerRef}
-        className="h-80 w-full overflow-hidden rounded border border-border"
-      />
-      <div className="flex items-center gap-3">
-        <label className="kg-chip w-fit cursor-pointer text-primary">
+    <div className="relative h-full w-full">
+      <div ref={containerRef} className="h-full w-full" />
+
+      <div className="pointer-events-none absolute inset-x-4 top-4 flex items-center gap-3">
+        <label className="pointer-events-auto flex cursor-pointer items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-sm font-medium text-ink shadow-sm hover:bg-surface-alt">
+          <Upload size={15} strokeWidth={2} />
           Subir archivo .ifc
           <input
             type="file"
@@ -124,13 +125,19 @@ export function BimViewer() {
           />
         </label>
         {status === "loading" && (
-          <span className="text-xs text-muted">Cargando {fileName}…</span>
+          <span className="pointer-events-auto rounded-md bg-surface px-3 py-2 text-xs text-muted shadow-sm">
+            Cargando {fileName}…
+          </span>
         )}
         {status === "ready" && (
-          <span className="text-xs text-status-done">{fileName} cargado</span>
+          <span className="pointer-events-auto rounded-md bg-surface px-3 py-2 text-xs text-status-done shadow-sm">
+            {fileName} cargado
+          </span>
         )}
         {status === "error" && (
-          <span className="text-xs text-status-blocked">{errorMessage}</span>
+          <span className="pointer-events-auto rounded-md bg-surface px-3 py-2 text-xs text-status-blocked shadow-sm">
+            {errorMessage}
+          </span>
         )}
       </div>
     </div>

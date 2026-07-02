@@ -1,49 +1,16 @@
 import { Card, SectionHeading } from "@/components/ui/Card";
-import { GanttChart } from "@/components/gantt/GanttChart";
-import type { ScheduleTask } from "@/modules/shared/types";
-
-// TODO: reemplazar por modules/schedule/task.repository.ts (listTasksByProject).
-const MOCK_TASKS: ScheduleTask[] = [
-  {
-    id: "1",
-    projectId: "demo-project",
-    parentId: null,
-    name: "Fundaciones",
-    startDate: "2026-01-05",
-    endDate: "2026-02-10",
-    progress: 100,
-    status: "done",
-    dependencies: [],
-  },
-  {
-    id: "2",
-    projectId: "demo-project",
-    parentId: null,
-    name: "Estructura nivel 1",
-    startDate: "2026-02-11",
-    endDate: "2026-03-20",
-    progress: 65,
-    status: "in_progress",
-    dependencies: ["1"],
-  },
-  {
-    id: "3",
-    projectId: "demo-project",
-    parentId: null,
-    name: "Estructura nivel 2",
-    startDate: "2026-03-21",
-    endDate: "2026-04-25",
-    progress: 0,
-    status: "pending",
-    dependencies: ["2"],
-  },
-];
+import { FrappeGanttChart } from "@/components/gantt/FrappeGanttChart";
+import { MOCK_TASKS } from "@/modules/shared/mock-data";
 
 export default function SchedulePage() {
   return (
-    <Card>
-      <SectionHeading title="Carta Gantt" />
-      <GanttChart tasks={MOCK_TASKS} />
-    </Card>
+    <div className="px-8 py-8">
+      <Card className="h-[calc(100dvh-9rem)]">
+        <SectionHeading title="Carta Gantt" />
+        <div className="h-[calc(100%-3rem)]">
+          <FrappeGanttChart tasks={MOCK_TASKS} />
+        </div>
+      </Card>
+    </div>
   );
 }

@@ -79,3 +79,38 @@ body {
 .kg-row:last-child {
   border-bottom: none;
 }
+
+/* frappe-gantt: recolorea las barras según el estado de la tarea. */
+.frappe-gantt-container {
+  height: 100%;
+  overflow: auto;
+}
+
+.frappe-gantt-container svg.gantt {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/*
+ * Especificidad: la regla base de frappe-gantt es
+ * `.gantt .bar-wrapper .bar` (3 clases). Igualamos la forma del
+ * selector con `.bar-wrapper` explícito para no perder el override.
+ */
+.gantt .bar-wrapper.gantt-status-pending .bar {
+  fill: var(--color-status-pending);
+}
+.gantt .bar-wrapper.gantt-status-in_progress .bar {
+  fill: var(--color-status-progress);
+}
+.gantt .bar-wrapper.gantt-status-done .bar {
+  fill: var(--color-status-done);
+}
+.gantt .bar-wrapper.gantt-status-blocked .bar {
+  fill: var(--color-status-blocked);
+}
+.gantt .bar-wrapper.gantt-status-pending .bar-progress,
+.gantt .bar-wrapper.gantt-status-in_progress .bar-progress,
+.gantt .bar-wrapper.gantt-status-done .bar-progress,
+.gantt .bar-wrapper.gantt-status-blocked .bar-progress {
+  fill: var(--color-ink);
+  opacity: 0.35;
+}

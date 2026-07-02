@@ -22,7 +22,7 @@ const MOCK_PROJECTS = [
 
 export default function Home() {
   return (
-    <div className="flex min-h-full flex-1 flex-col bg-background">
+    <div className="flex h-full flex-1 flex-col overflow-y-auto bg-background">
       <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-surface px-8">
         <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-on-primary">
           <FolderKanban size={16} strokeWidth={2} />
