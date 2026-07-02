@@ -44,35 +44,59 @@ export async function insertElements(
   if (error) throw error;
 }
 
-export type LatestModel = {
+export type BimModelSummary = {
   id: string;
   originalFilename: string;
   status: string;
   storagePath: string;
+  createdAt: string;
 };
 
-/** Último modelo BIM cargado para un proyecto, o null si no hay ninguno. */
-export async function getLatestModel(
+function rowToModel(
+  row: Pick<
+    Database["public"]["Tables"]["bim_models"]["Row"],
+    "id" | "original_filename" | "status" | "storage_path" | "created_at"
+  >,
+): BimModelSummary {
+  return {
+    id: row.id,
+    originalFilename: row.original_filename,
+    status: row.status,
+    storagePath: row.storage_path,
+    createdAt: row.created_at,
+  };
+}
+
+/** Todos los modelos BIM subidos a un proyecto, del más reciente al más viejo. */
+export async function listModelsByProject(
   supabase: Client,
   projectId: string,
-): Promise<LatestModel | null> {
+): Promise<BimModelSummary[]> {
   const { data, error } = await supabase
     .from("bim_models")
-    .select("id, original_filename, status, storage_path")
+    .select("id, original_filename, status, storage_path, created_at")
     .eq("project_id", projectId)
-    .order("created_at", { ascending: false })
-    .limit(1)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data.map(rowToModel);
+}
+
+/** Un modelo BIM por id, o null si no existe o no pertenece al proyecto. */
+export async function getModelById(
+  supabase: Client,
+  projectId: string,
+  modelId: string,
+): Promise<BimModelSummary | null> {
+  const { data, error } = await supabase
+    .from("bim_models")
+    .select("id, original_filename, status, storage_path, created_at")
+    .eq("project_id", projectId)
+    .eq("id", modelId)
     .maybeSingle();
 
   if (error) throw error;
-  if (!data) return null;
-
-  return {
-    id: data.id,
-    originalFilename: data.original_filename,
-    status: data.status,
-    storagePath: data.storage_path,
-  };
+  return data ? rowToModel(data) : null;
 }
 
 /** Cantidad de elementos por tipo IFC (IfcWall, IfcSlab, ...) de un modelo. */

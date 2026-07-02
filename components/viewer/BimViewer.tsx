@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Upload } from "lucide-react";
 import { ThatOpenViewer, type SelectedElement } from "@/modules/bim/thatopen-viewer";
 import { uploadIfcModel } from "@/app/actions/bim-models";
+import { ModelSelector } from "@/components/viewer/ModelSelector";
+import type { BimModelSummary } from "@/modules/bim/element.repository";
 
 type LoadStatus = "idle" | "loading" | "saving" | "ready" | "error";
 
@@ -12,6 +14,8 @@ type BimViewerProps = {
   projectId: string;
   initialModelUrl?: string | null;
   initialModelName?: string;
+  models?: BimModelSummary[];
+  selectedModelId?: string | null;
   onSelectionChange?: (elements: SelectedElement[]) => void;
 };
 
@@ -23,16 +27,43 @@ export function BimViewer({
   projectId,
   initialModelUrl,
   initialModelName,
+  models = [],
+  selectedModelId = null,
   onSelectionChange,
 }: BimViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<ThatOpenViewer | null>(null);
+  const loadedUrlRef = useRef<string | null | undefined>(undefined);
   const router = useRouter();
+  const pathname = usePathname();
 
   const [status, setStatus] = useState<LoadStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
 
+  async function loadModelFromUrl(
+    viewer: ThatOpenViewer,
+    url: string,
+    name: string | undefined,
+  ) {
+    setStatus("loading");
+    setErrorMessage(null);
+    setFileName(name ?? "modelo guardado");
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`No se pudo descargar el modelo (${response.status}).`);
+      const buffer = new Uint8Array(await response.arrayBuffer());
+      await viewer.loadIfc(buffer, name ?? "modelo.ifc");
+      setStatus("ready");
+    } catch (err) {
+      setStatus("error");
+      setErrorMessage(
+        err instanceof Error ? err.message : "No se pudo cargar el modelo guardado.",
+      );
+    }
+  }
+
+  // Crea el visor una sola vez y carga el modelo inicial (si corresponde).
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -51,23 +82,8 @@ export function BimViewer({
       }
 
       if (initialModelUrl) {
-        setStatus("loading");
-        setFileName(initialModelName ?? "modelo guardado");
-        try {
-          const response = await fetch(initialModelUrl);
-          if (!response.ok) throw new Error(`No se pudo descargar el modelo (${response.status}).`);
-          const buffer = new Uint8Array(await response.arrayBuffer());
-          if (disposed) return;
-          await viewer.loadIfc(buffer, initialModelName ?? "modelo.ifc");
-          if (!disposed) setStatus("ready");
-        } catch (err) {
-          if (!disposed) {
-            setStatus("error");
-            setErrorMessage(
-              err instanceof Error ? err.message : "No se pudo cargar el modelo guardado.",
-            );
-          }
-        }
+        loadedUrlRef.current = initialModelUrl;
+        await loadModelFromUrl(viewer, initialModelUrl, initialModelName);
       }
     });
 
@@ -79,6 +95,22 @@ export function BimViewer({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Recarga el modelo cuando el usuario elige otro en el selector (el
+  // efecto de montaje ya cubrió la carga inicial, por eso el guard).
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer || loadedUrlRef.current === initialModelUrl) return;
+    loadedUrlRef.current = initialModelUrl;
+
+    if (initialModelUrl) {
+      loadModelFromUrl(viewer, initialModelUrl, initialModelName);
+    } else {
+      viewer.clearModels();
+      setStatus("idle");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialModelUrl]);
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -95,10 +127,10 @@ export function BimViewer({
       setStatus("saving");
       const uploadForm = new FormData();
       uploadForm.set("file", file);
-      await uploadIfcModel(projectId, uploadForm);
+      const { modelId } = await uploadIfcModel(projectId, uploadForm);
 
       setStatus("ready");
-      router.refresh();
+      router.push(`${pathname}?modelId=${modelId}`);
     } catch (err) {
       setStatus("error");
       setErrorMessage(err instanceof Error ? err.message : "No se pudo cargar el archivo .ifc");
@@ -112,6 +144,11 @@ export function BimViewer({
       <div ref={containerRef} className="h-full w-full" />
 
       <div className="pointer-events-none absolute inset-x-4 top-4 flex items-center gap-3">
+        {models.length > 0 && (
+          <div className="pointer-events-auto">
+            <ModelSelector models={models} selectedModelId={selectedModelId} />
+          </div>
+        )}
         <label className="pointer-events-auto flex cursor-pointer items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-sm font-medium text-ink shadow-sm hover:bg-surface-alt">
           <Upload size={15} strokeWidth={2} />
           Subir archivo .ifc

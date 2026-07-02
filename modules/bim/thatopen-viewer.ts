@@ -156,7 +156,14 @@ export class ThatOpenViewer {
     return () => this.selectionCallbacks.delete(callback);
   }
 
+  /** Descarga de la escena todos los modelos cargados actualmente. */
+  async clearModels(): Promise<void> {
+    const modelIds = Array.from(this.fragments.list.keys());
+    await Promise.all(modelIds.map((id) => this.fragments.core.disposeModel(id)));
+  }
+
   async loadIfc(buffer: Uint8Array, name: string): Promise<FRAGS.FragmentsModel> {
+    await this.clearModels();
     const ifcLoader = this.components.get(OBC.IfcLoader);
     const model = await ifcLoader.load(buffer, false, name);
     await this.fitToModel(model);
